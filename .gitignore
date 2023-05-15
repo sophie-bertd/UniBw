@@ -3,5 +3,6 @@ __pycache__
 .env
 *.config
 data/
+app/
 PRISM-feat_interferometry/
 PSI_processing_chain-Develop/

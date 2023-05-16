@@ -163,8 +163,8 @@ class SplitMasterOrSlave:
 
         # input TOPSAR-Split parameters
         parameters = HashMap()
-        #parameters.put('firstBurstIndex', 7)
-        #parameters.put('lastBurstIndex', 9)
+        parameters.put('firstBurstIndex', 7)
+        parameters.put('lastBurstIndex', 9)
         parameters.put('subswath', 'IW1')
         parameters.put('selectedPolarisations', 'VV')
 

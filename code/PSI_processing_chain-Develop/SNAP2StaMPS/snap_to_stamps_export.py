@@ -128,8 +128,17 @@ class CoregisterIfgGeneration:
         product_deb = self.perform_topsar_deburst(product_ifg)
         product_dinsar = self.remove_topo_phase(product_deb)
 
-        self.write_slcs(product_dinsar, self.ifg_file_path)
+        project_folder = r'exports/Project'
+        if not os.path.exists(os.path.join(project_folder, 'temp')):
+            os.makedirs(os.path.join(project_folder, 'temp'))
+
+        self.write_slcs(product_stack, os.path.join(project_folder, 'temp', os.path.basename(product_stack.getName()).split('.')[0] + '_stack'))
+        self.write_slcs(product_esd, os.path.join(project_folder, 'temp', os.path.basename(product_esd.getName()).split('.')[0] + '_esd'))
+        self.write_slcs(product_ifg, os.path.join(project_folder, 'temp', os.path.basename(product_ifg.getName()).split('.')[0] + '_ifg'))
+        self.write_slcs(product_deb, os.path.join(project_folder, 'temp', os.path.basename(product_deb.getName()).split('.')[0] + '_deb'))
+
         self.write_slcs(product_esd_deb, self.coreg_file_path)
+        self.write_slcs(product_dinsar, self.ifg_file_path)
     
 # class StaMPS_export:
 #     def __init__(self, coreg, ifg):
@@ -165,7 +174,7 @@ class SplitMasterOrSlave:
         parameters = HashMap()
         parameters.put('firstBurstIndex', 7)
         parameters.put('lastBurstIndex', 9)
-        parameters.put('subswath', 'IW1')
+        parameters.put('subswath', 'IW3')
         parameters.put('selectedPolarisations', 'VV')
 
         output = GPF.createProduct('TOPSAR-Split', parameters, slc_product_aoi)
@@ -283,7 +292,7 @@ def generate_time_series(optimal_master_path, coreg_paths):
         img_stack[i] = stack_calibration
 
     stack_create_stack = perform_time_series.create_stack(img_stack)
-    perform_time_series.write_slcs(stack_create_stack, os.path.join(project_folder, 'stack', os.path.basename(stack_create_stack).split('.')[0]) + '_stack')
+    perform_time_series.write_slcs(stack_create_stack, os.path.join(project_folder, 'stack', os.path.basename(stack_create_stack).split('.')[0] + '_stack'))
 
 def snap2stamps_export():
     root_path = r'exports'

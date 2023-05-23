@@ -1,21 +1,23 @@
+import fnmatch
 import glob
-from inspect import Parameter 
-import numpy as np
-import snappy
-from zipfile import ZipFile 
-from snappy import GPF 
 import os
-import shutil 
-from tqdm import tqdm
-from snappy import HashMap
+import shutil
 import subprocess
 import sys
+from inspect import Parameter
 from pathlib import Path
+from zipfile import ZipFile
+
+import numpy as np
+import snappy
 from joblib import Parallel, delayed
-import fnmatch
+from snappy import GPF, HashMap
+from tqdm import tqdm
+
 sys.path.append(r'exports/bin')
 import time
 from datetime import datetime
+
 
 class CoregisterIfgGeneration:
     def __init__(self, master_product, slave_product, project_path, outputfile_name):
@@ -35,8 +37,8 @@ class CoregisterIfgGeneration:
 
         # create a set of split master and slave products
         imgset = []
-        imgset.append(self.master_product)
         imgset.append(self.slave_product)
+        imgset.append(self.master_product)
 
         # input Back-Geo-Coding parameters
         parameters = HashMap()
@@ -115,10 +117,6 @@ class CoregisterIfgGeneration:
 
         self.write_slcs(product_esd_deb, self.coreg_file_path)
         self.write_slcs(product_deb, self.ifg_file_path)
-    
-# class StaMPS_export:
-#     def __init__(self, coreg, ifg):
-#         pass
          
 class SplitMasterOrSlave:
     def __init__(self, source, save_path):
@@ -160,16 +158,16 @@ class SplitMasterOrSlave:
         write_format = 'BEAM-DIMAP'
         snappy.ProductIO.writeProduct(source, save_path, write_format)
 
-class MergeFilterMultilookGeocode:
+class MergeMultilookFilterGeocode:
     def __init__(self, products, project_path):
         print('*'*60)
-        print('Merge, FIlter, Multi-look and Geocode')
+        print('Merge, Multi-look, Filter and Geocode')
         print('*'*60)
 
         self.products = products
         self.save_path = os.path.join(project_path, 'merge')
 
-    def do_merge(self, products):
+    def do_merge(self, ifg_products):
         print('\tTOPSAR merge')
         print('-'*60)
 
@@ -177,10 +175,10 @@ class MergeFilterMultilookGeocode:
         parameters = HashMap()
         parameters.put('selectedPolarisations', 'VV')
 
-        output = GPF.createProduct('TOPSAR-Merge', parameters, products)
+        output = GPF.createProduct('TOPSAR-Merge', parameters, ifg_products)
         return output
 
-    def remove_topo_phase(self, deb_product):
+    def remove_topo_phase(self, mrg_product):
         print('\tRemoving TOPO-Phase from the interferogram')
         print('-'*60)
 
@@ -193,10 +191,10 @@ class MergeFilterMultilookGeocode:
         parameters.put('outputLatLonBands', True)
         parameters.put('outputElevationBand', True)
 
-        output = GPF.createProduct('TopoPhaseRemoval', parameters, deb_product)
+        output = GPF.createProduct('TopoPhaseRemoval', parameters, mrg_product)
         return output
 
-    def apply_multilook(self, product):
+    def apply_multilook(self, dinsar_product):
         print('\tMulti-looking')
         print('-'*60)
 
@@ -206,10 +204,10 @@ class MergeFilterMultilookGeocode:
         parameters.put('nAzLooks', 2)
         parameters.put('grSquarePixel', True)
 
-        output = GPF.createProduct('Multilook', parameters, product)
+        output = GPF.createProduct('Multilook', parameters, dinsar_product)
         return output
 
-    def do_goldstein_phasefiltering(self, product):
+    def do_goldstein_phasefiltering(self, ml_product):
         print('\tGoldstein Phase Filtering')
         print('-'*60)
 
@@ -221,10 +219,10 @@ class MergeFilterMultilookGeocode:
         parameters.put("Use coherence mask", False)
         parameters.put("Coherence Threshold in[0,1]:", 0.2)  
 
-        output = GPF.createProduct("GoldsteinPhaseFiltering", parameters, product)
+        output = GPF.createProduct("GoldsteinPhaseFiltering", parameters, ml_product)
         return output
 
-    def apply_terrain_correction(self, product):
+    def apply_terrain_correction(self, flt_product):
         print('\tGeocoding')
         print('-'*60)
 
@@ -236,7 +234,7 @@ class MergeFilterMultilookGeocode:
         parameters.put('pixelSpacingInMeter', float(30))
         parameters.put('maskOutAreaWithoutElevation', True)
 
-        output = GPF.createProduct("Terrain-Correction", parameters, product)
+        output = GPF.createProduct("Terrain-Correction", parameters, flt_product)
         return output
 
     @classmethod
@@ -254,55 +252,6 @@ class MergeFilterMultilookGeocode:
         self.write_slcs(product_merge, os.path.join(self.save_path, product_merge.getName()))
         self.write_slcs(product_dinsar, os.path.join(self.save_path, product_dinsar.getName()))
         self.write_slcs(product_geocoding, os.path.join(self.save_path, product_geocoding.getName()))
-
-# class TimeSeries:
-#     def __init__(self, coreg_paths):
-#         print('*'*60)
-#         print('Generating Time Series')
-#         print('*'*60)
-
-#         self.coreg_paths = coreg_paths
-
-#     def do_calibration(self, product):
-#         print('\tCalibrating')
-#         print('-'*60)
-
-#         # input Calibration parameters
-#         parameters = HashMap()
-#         parameters.put('outputSigmaBand', True)
-#         parameters.put('selectedPolarisations', 'VV')
-
-#         output = GPF.createProduct('Calibration', parameters, product)
-#         return output
-
-#     # def create_subset(self, product, subset_geo_region):
-#     #     print('\tCreating subset')
-#     #     print('-'*60)
-
-#     #     # input Subset parameters
-#     #     parameters = HashMap()
-#     #     parameters.put('copyMetadata', True)
-#     #     parameters.put('geoRegion', subset_geo_region)
-
-#     #     output = GPF.createProduct('Subset', parameters, product)
-#     #     return output
-
-#     def create_stack(self, product_list):
-#         print('\tCreating stack')
-#         print('-'*60)
-
-#         # input CreateStack parameters
-#         parameters = HashMap()
-#         parameters.put('resamplingType', None)
-#         parameters.put('initialOffsetMethod', 'Product Geolocation')
-#         parameters.put('extent', 'Master')
-
-#         output = GPF.createProduct('CreateStack', parameters, product_list)
-#         return output
-
-#     def write_slcs(self, source, save_path):
-#         write_format = 'BEAM-DIMAP'
-#         snappy.ProductIO.writeProduct(source, save_path, write_format)
     
 # def findOpticalMaster(data_path):
 #     slc_paths =  glob.glob(f'{data_path}/*.zip')
@@ -328,17 +277,22 @@ class MergeFilterMultilookGeocode:
 def save_coreg_ifg_products(split_master, split_slave):
     project_folder = r'exports/Project'
 
+    # creating export folders
     if not os.path.exists(os.path.join(project_folder, 'ifg')):
             os.makedirs(os.path.join(project_folder, 'ifg'))
 
     if not os.path.exists(os.path.join(project_folder, 'coreg')):
             os.makedirs(os.path.join(project_folder, 'coreg'))
 
+    # creating array of products to prepare for merge
     products = snappy.jpy.array('org.esa.snap.core.datamodel.Product', len(split_master))
+
+    # for each swath apply coregistration and generate interferogram
     for i in range(len(split_master)):
         master = snappy.ProductIO.readProduct(split_master[i])
         slave = snappy.ProductIO.readProduct(split_slave[i])
 
+        # creating output name based on master and slave dates
         head, tailm = os.path.split(split_master[i])
         head, tails = os.path.split(split_slave[i]) 
         output_name = tailm[17:25] + '_' + tails[17:25] + '_' + tails[0:10] + '_' + 'IW' + str(i + 1) + '.dim'
@@ -356,37 +310,14 @@ def save_coreg_ifg_products(split_master, split_slave):
     
     return products
 
-def save_merge_multilook_geocoding(product):
+def save_merge_multilook_filter_geocoding(product):
     project_folder = r'exports/Project'
 
+    # creating export folder
     if not os.path.exists(os.path.join(project_folder, 'merge')):
             os.makedirs(os.path.join(project_folder, 'merge'))
 
-    MergeFilterMultilookGeocode(product, project_folder).run()
-
-# def generate_time_series(optimal_master_path, coreg_paths):
-#     project_folder = r'exports/Project'
-
-#     if not os.path.exists(os.path.join(project_folder, 'stack')):
-#             os.makedirs(os.path.join(project_folder, 'stack'))
-
-#     imgset = []
-#     imgset.append(optimal_master_path.split('.')[0] + '.dim')
-#     for root, dirnames, filenames in os.walk(coreg_paths):
-#         for filename in tqdm(fnmatch.filter(filenames, '*.dim')):
-#             imgset.append(os.path.join(project_folder, 'coreg', filename))
-
-#     perform_time_series = TimeSeries(imgset)
-    
-#     img_stack = snappy.jpy.array('org.esa.snap.core.datamodel.Product', len(imgset))
-#     for i, img_path in enumerate(imgset):
-#         img = snappy.ProductIO.readProduct(img_path)
-#         stack_calibration = perform_time_series.do_calibration(img)
-#         perform_time_series.write_slcs(stack_calibration, os.path.join(project_folder, 'stack', os.path.basename(img_path).split('.')[0]))
-#         img_stack[i] = stack_calibration
-
-#     stack_create_stack = perform_time_series.create_stack(img_stack)
-#     perform_time_series.write_slcs(stack_create_stack, os.path.join(project_folder, 'stack', os.path.basename(stack_create_stack).split('.')[0] + '_stack'))
+    MergeMultilookFilterGeocode(product, project_folder).run()
 
 def snap2stamps_export():
     root_path = r'exports'
@@ -418,9 +349,10 @@ def snap2stamps_export():
     #     slave_name = os.path.basename(slave_path)
     #     shutil.copy(slave_path, os.path.join(root_path, 'Project', 'slaves', slave_name))     
     
+    # manually setting master image path
     optimal_master_path = r'exports/Project/master/S1A_IW_SLC__1SDV_20230330T175700_20230330T175726_047877_05C0C4_2638.zip'
 
-    # applying orbit file and performing TOPSAR-SPLIT for master slc file and moving to created master directory 
+    # applying orbit file and performing TOPSAR-SPLIT for master slc file
     master_slc = snappy.ProductIO.readProduct(optimal_master_path)
 
     start = time.strftime('%H:%M:%S', time.localtime())
@@ -466,36 +398,28 @@ def snap2stamps_export():
             split_slave_paths.append(split)
 
     # coregisteration of master and slaves --> exporting the interferograms 
-    products = []
+    ifg_products = []
     for split_slave_pth in tqdm(split_slave_paths):
         start = time.strftime('%H:%M:%S', time.localtime())
         print('Start coregistration: ' + start)
 
-        products.append(save_coreg_ifg_products(master_split, split_slave_pth))
+        output = save_coreg_ifg_products(master_split, split_slave_pth)
+        ifg_products.append(output)
         
         finish = time.strftime('%H:%M:%S', time.localtime())
         print('Finish coregistration: ' + finish)
         print('Time taken for coregistration: ' + str(datetime.strptime(finish, '%H:%M:%S') - datetime.strptime(start, '%H:%M:%S')))
 
-    # geocoding of interferograms
-    for product in products:
+    # merging each swath respectively and applying topo-phase removal, multi-look, goldstein filter --> exporting the geocoded interferograms
+    for product in ifg_products:
         start = time.strftime('%H:%M:%S', time.localtime())
         print('Start geocoding: ' + start)
 
-        save_merge_multilook_geocoding(product)
+        save_merge_multilook_filter_geocoding(product)
 
         finish = time.strftime('%H:%M:%S', time.localtime())
         print('Finish geocoding: ' + finish)
         print('Time taken for geocoding: ' + str(datetime.strptime(finish, '%H:%M:%S') - datetime.strptime(start, '%H:%M:%S')))
-
-    # # generating time series
-    # generate_time_series(optimal_master_path, os.path.join(root_path, 'Project','coreg'))
-    
-    # StaMPS export  
-    # args = [r'C:\Python27\python.exe',r'C:\Users\Placeholder\Desktop\Pre-Processing_Module\Project\bin\stamps_export.py', \
-    #     r'C:\Users\Placeholder\Desktop\Pre-Processing_Module\Project\bin\project.conf']
-    # process = subprocess.Popen(args, stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
-    # print(process.communicate()[0])
     
 snap2stamps_export()
 

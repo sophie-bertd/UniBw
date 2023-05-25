@@ -28,8 +28,8 @@ class CoregisterIfgGeneration:
         self.master_product = master_product
         self.slave_product = slave_product
         self.save_path = project_path
-        self.ifg_file_path = os.path.join(project_path, 'ifg', outputfile_name)  
-        self.coreg_file_path = os.path.join(project_path, 'coreg', outputfile_name)
+        self.coreg_file_path = os.path.join(project_path, 'coreg', outputfile_name + '_coreg.dim')
+        self.ifg_file_path = os.path.join(project_path, 'ifg', outputfile_name + '_ifg.dim')  
         
     def perform_back_geo_coding(self):
         print('\tPerforming Back-Geocoding')
@@ -222,6 +222,16 @@ class MergeMultilookFilterGeocode:
         output = GPF.createProduct("GoldsteinPhaseFiltering", parameters, ml_product)
         return output
 
+    # def do_phase_unwrapping(self, ml_product):
+    #     print('\Phase Unwrapping')
+    #     print('-'*60)
+
+    #     # input parameters
+    #     parameters = HashMap()
+
+    #     output = GPF.createProduct('', parameters, ml_product)
+    #     return output
+
     def apply_terrain_correction(self, flt_product):
         print('\tGeocoding')
         print('-'*60)
@@ -239,8 +249,9 @@ class MergeMultilookFilterGeocode:
 
     @classmethod
     def write_slcs(cls, source, save_path):
-        write_format = 'BEAM-DIMAP'
-        snappy.ProductIO.writeProduct(source, save_path, write_format)
+        write_format = ['BEAM-DIMAP', 'GeoTIFF-BigTIFF']
+        snappy.ProductIO.writeProduct(source, save_path, write_format[0])
+        snappy.ProductIO.writeProduct(source, save_path, write_format[1])
 
     def run(self):
         product_merge = self.do_merge(self.products)
@@ -249,9 +260,9 @@ class MergeMultilookFilterGeocode:
         product_filter = self.do_goldstein_phasefiltering(product_multilook)
         product_geocoding = self.apply_terrain_correction(product_filter)
 
-        self.write_slcs(product_merge, os.path.join(self.save_path, product_merge.getName()))
-        self.write_slcs(product_dinsar, os.path.join(self.save_path, product_dinsar.getName()))
-        self.write_slcs(product_geocoding, os.path.join(self.save_path, product_geocoding.getName()))
+        # self.write_slcs(product_merge, os.path.join(self.save_path, product_merge.getName().replace('_IW1', '')))
+        # self.write_slcs(product_dinsar, os.path.join(self.save_path, product_dinsar.getName().replace('_IW1', '')))
+        self.write_slcs(product_geocoding, os.path.join(self.save_path, product_geocoding.getName().replace('_IW1', '')))
     
 # def findOpticalMaster(data_path):
 #     slc_paths =  glob.glob(f'{data_path}/*.zip')
@@ -285,7 +296,7 @@ def save_coreg_ifg_products(split_master, split_slave):
             os.makedirs(os.path.join(project_folder, 'coreg'))
 
     # creating array of products to prepare for merge
-    products = snappy.jpy.array('org.esa.snap.core.datamodel.Product', len(split_master))
+    products_ifg = snappy.jpy.array('org.esa.snap.core.datamodel.Product', len(split_master))
 
     # for each swath apply coregistration and generate interferogram
     for i in range(len(split_master)):
@@ -295,7 +306,7 @@ def save_coreg_ifg_products(split_master, split_slave):
         # creating output name based on master and slave dates
         head, tailm = os.path.split(split_master[i])
         head, tails = os.path.split(split_slave[i]) 
-        output_name = tailm[17:25] + '_' + tails[17:25] + '_' + tails[0:10] + '_' + 'IW' + str(i + 1) + '.dim'
+        output_name = tailm[17:25] + '_' + tails[17:25] + '_' + tails[0:10] + '_IW' + str(i + 1)
 
         start = time.strftime('%H:%M:%S', time.localtime())
         print('IW' + str(i + 1) + ' start: ' + start)
@@ -306,9 +317,9 @@ def save_coreg_ifg_products(split_master, split_slave):
         print('IW' + str(i + 1) + ' finish: ' + finish)
         print('IW' + str(i + 1) + ' time taken: ' + str(datetime.strptime(finish, '%H:%M:%S') - datetime.strptime(start, '%H:%M:%S')))
 
-        products[i] = snappy.ProductIO.readProduct(os.path.join(project_folder, 'ifg', output_name))
+        products_ifg[i] = snappy.ProductIO.readProduct(os.path.join(project_folder, 'ifg', output_name + '_ifg.dim'))
     
-    return products
+    return products_ifg
 
 def save_merge_multilook_filter_geocoding(product):
     project_folder = r'exports/Project'
@@ -323,15 +334,15 @@ def snap2stamps_export():
     root_path = r'exports'
     
     # create directories required for snap2stamps in project folder
-    try:
-        os.makedirs(os.path.join(root_path, 'Project', 'master'))
-    except OSError:
-        print('master folder already exists in project folder')
+    # try:
+    #     os.makedirs(os.path.join(root_path, 'Project', 'master'))
+    # except OSError:
+    #     print('master folder already exists in project folder')
 
-    try:
-        os.makedirs(os.path.join(root_path, 'Project', 'slaves'))
-    except OSError:
-        print('slaves directory already exists in the project directory')
+    # try:
+    #     os.makedirs(os.path.join(root_path, 'Project', 'slaves'))
+    # except OSError:
+    #     print('slaves directory already exists in the project directory')
 
     try:
         os.makedirs(os.path.join(root_path, 'Project', 'split'))
@@ -350,7 +361,11 @@ def snap2stamps_export():
     #     shutil.copy(slave_path, os.path.join(root_path, 'Project', 'slaves', slave_name))     
     
     # manually setting master image path
-    optimal_master_path = r'exports/Project/master/S1A_IW_SLC__1SDV_20230330T175700_20230330T175726_047877_05C0C4_2638.zip'
+    # optimal_master_path = r'exports/Project/master/S1A_IW_SLC__1SDV_20230330T175700_20230330T175726_047877_05C0C4_2638.zip'
+    path = os.path.join(root_path, 'Project','master')
+    for root, dirnames, filenames in os.walk(path):
+        for filename in tqdm(fnmatch.filter(filenames, '*.zip')):
+            optimal_master_path = r'exports/Project/master/' + filename
 
     # applying orbit file and performing TOPSAR-SPLIT for master slc file
     master_slc = snappy.ProductIO.readProduct(optimal_master_path)

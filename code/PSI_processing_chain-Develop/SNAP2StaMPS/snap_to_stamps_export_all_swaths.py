@@ -282,7 +282,7 @@ class MergeMultilookFilterGeocode:
     @classmethod
     def write_slcs(cls, source, save_path):
         write_format = ['BEAM-DIMAP', 'GeoTIFF-BigTIFF']
-        snappy.ProductIO.writeProduct(source, save_path, write_format[0])
+        # snappy.ProductIO.writeProduct(source, save_path, write_format[0])
         snappy.ProductIO.writeProduct(source, save_path, write_format[1])
 
     def run(self):

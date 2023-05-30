@@ -20,6 +20,23 @@ from datetime import datetime
 
 
 class CoregisterIfgGeneration:
+    """
+    This class is used to perform the coregistration and interferogram generation
+
+    Args:
+        master_product (str): path to the master product
+        slave_product (str): path to the slave product
+        project_path (str): path to the project folder
+        outputfile_name (str): name of the output file
+
+    Returns:
+        None
+
+    Saves:
+        coregistered product in the coreg folder
+        interferogram in the ifg folder
+    """
+
     def __init__(self, master_product, slave_product, project_path, outputfile_name):
         print('*'*60)
         print('Starting Coregistration and Interferogram generation')
@@ -119,6 +136,17 @@ class CoregisterIfgGeneration:
         self.write_slcs(product_deb, self.ifg_file_path)
          
 class SplitMasterOrSlave:
+    """
+    This class is used to split the master or slave product into subswaths
+
+    Args:
+        source (str): path to the master or slave product
+        save_path (str): path to the project folder
+
+    Returns:
+        None
+    """
+
     def __init__(self, source, save_path):
         print('*'*60)
         print('Split Master or Slave Product')
@@ -159,6 +187,20 @@ class SplitMasterOrSlave:
         snappy.ProductIO.writeProduct(source, save_path, write_format)
 
 class MergeMultilookFilterGeocode:
+    """
+    This class is used to merge, multi-look, filter and geocode the interferograms
+
+    Args:
+        products (list): list of interferograms
+        project_path (str): path to the project folder
+
+    Returns:
+        None
+
+    Saves:
+        InSAR products in the merge folder
+    """
+
     def __init__(self, products, project_path):
         print('*'*60)
         print('Merge, Multi-look, Filter and Geocode')
@@ -222,16 +264,6 @@ class MergeMultilookFilterGeocode:
         output = GPF.createProduct("GoldsteinPhaseFiltering", parameters, ml_product)
         return output
 
-    # def do_phase_unwrapping(self, ml_product):
-    #     print('\Phase Unwrapping')
-    #     print('-'*60)
-
-    #     # input parameters
-    #     parameters = HashMap()
-
-    #     output = GPF.createProduct('', parameters, ml_product)
-    #     return output
-
     def apply_terrain_correction(self, flt_product):
         print('\tGeocoding')
         print('-'*60)
@@ -260,8 +292,6 @@ class MergeMultilookFilterGeocode:
         product_filter = self.do_goldstein_phasefiltering(product_multilook)
         product_geocoding = self.apply_terrain_correction(product_filter)
 
-        # self.write_slcs(product_merge, os.path.join(self.save_path, product_merge.getName().replace('_IW1', '')))
-        # self.write_slcs(product_dinsar, os.path.join(self.save_path, product_dinsar.getName().replace('_IW1', '')))
         self.write_slcs(product_geocoding, os.path.join(self.save_path, product_geocoding.getName().replace('_IW1', '')))
     
 # def findOpticalMaster(data_path):
@@ -286,6 +316,17 @@ class MergeMultilookFilterGeocode:
 #     return master_path, slaves_path
 
 def save_coreg_ifg_products(split_master, split_slave):
+    """
+    Function to save coregistered and interferogram products
+
+    Args:
+        split_master (list): list of master products
+        split_slave (list): list of slave products
+
+    Returns:
+        None
+    """
+
     project_folder = r'exports/Project'
 
     # creating export folders
@@ -322,6 +363,16 @@ def save_coreg_ifg_products(split_master, split_slave):
     return products_ifg
 
 def save_merge_multilook_filter_geocoding(product):
+    """
+    Function to save merged, multilooked, filtered and geocoded products
+
+    Args:
+        product (list): list of products
+
+    Returns:
+        None
+    """
+
     project_folder = r'exports/Project'
 
     # creating export folder
@@ -331,18 +382,17 @@ def save_merge_multilook_filter_geocoding(product):
     MergeMultilookFilterGeocode(product, project_folder).run()
 
 def snap2stamps_export():
-    root_path = r'exports'
-    
-    # create directories required for snap2stamps in project folder
-    # try:
-    #     os.makedirs(os.path.join(root_path, 'Project', 'master'))
-    # except OSError:
-    #     print('master folder already exists in project folder')
+    """
+    Function to export snap2stamps products
 
-    # try:
-    #     os.makedirs(os.path.join(root_path, 'Project', 'slaves'))
-    # except OSError:
-    #     print('slaves directory already exists in the project directory')
+    Args:
+        None
+
+    Returns:
+        None
+    """
+    
+    root_path = r'exports'
 
     try:
         os.makedirs(os.path.join(root_path, 'Project', 'split'))
@@ -361,7 +411,6 @@ def snap2stamps_export():
     #     shutil.copy(slave_path, os.path.join(root_path, 'Project', 'slaves', slave_name))     
     
     # manually setting master image path
-    # optimal_master_path = r'exports/Project/master/S1A_IW_SLC__1SDV_20230330T175700_20230330T175726_047877_05C0C4_2638.zip'
     path = os.path.join(root_path, 'Project','master')
     for root, dirnames, filenames in os.walk(path):
         for filename in tqdm(fnmatch.filter(filenames, '*.zip')):

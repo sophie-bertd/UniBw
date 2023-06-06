@@ -1,8 +1,10 @@
 .DS_Store
 __pycache__
 .env
-# *.config
-data/
-app/
+*.config
+build/
+dist/
+*.egg-info
 PRISM-feat_interferometry/
-# PSI_processing_chain-Develop/
+PSI_processing_chain-Develop/
+data/

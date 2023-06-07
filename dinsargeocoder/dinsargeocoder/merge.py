@@ -1,6 +1,6 @@
 import snappy
 
-def do_merge(ifg_products):
+def merge(ifg_products):
     """
     TOPSAR merge
 

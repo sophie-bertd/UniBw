@@ -1,6 +1,6 @@
 import snappy
 
-def apply_multilook(dinsar_product):
+def multilook(dinsar_product):
     """
     Multi-looking
 

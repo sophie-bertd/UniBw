@@ -82,12 +82,12 @@ for split_slave_pth in tqdm(split_slave_paths):
     print('Start coregistration: ' + start)
 
     # creating array of products to prepare for merge
-    products_ifg = snappy.jpy.array('org.esa.snap.core.datamodel.Product', len(master_split))
+    products_ifg = dg.create_product_array(len(master_split))
 
     # for each swath apply coregistration and generate interferogram
     for i in range(len(master_split)):
-        master = snappy.ProductIO.readProduct(master_split[i])
-        slave = snappy.ProductIO.readProduct(split_slave_pth[i])
+        master = dg.read_product(master_split[i])
+        slave = dg.read_product(split_slave_pth[i])
 
         # creating output name based on master and slave dates
         head, tailm = os.path.split(master_split[i])
@@ -99,13 +99,13 @@ for split_slave_pth in tqdm(split_slave_paths):
 
         # applying coregistration
         product_stack = dg.back_geocoding(master, slave)
-        product_esd = self.apply_enhanced_spectral_diversity(product_stack)
-        product_esd_deb = self.perform_topsar_deburst(product_esd)
-        product_ifg = self.generate_interferogram(product_esd)
-        product_deb = self.perform_topsar_deburst(product_ifg)
+        product_esd = dg.enhanced_spectral_diversity(product_stack)
+        product_esd_deb = dg.topsar_deburst(product_esd)
+        product_ifg = dg.interferogram(product_esd)
+        product_deb = dg.topsar_deburst(product_ifg)
 
-        dg.write_dim_product(product_esd_deb, coreg_folder)
-        dg.write_dim_product(product_deb, ifg_folder)
+        dg.write_dim_product(product_esd_deb, os.path.join(coreg_folder, output_name + '_coreg.dim'))
+        dg.write_dim_product(product_deb, os.path.join(ifg_folder, output_name + '_ifg.dim'))
 
         finish = time.strftime('%H:%M:%S', time.localtime())
         print('IW' + str(i + 1) + ' finish: ' + finish)
@@ -125,11 +125,11 @@ for product in ifg_products:
     print('Start geocoding: ' + start)
 
     # merging the swaths and applying topo-phase removal, multi-look, goldstein filter, geocoding
-    product_merge = self.do_merge(product)
-    product_dinsar = self.remove_topo_phase(product_merge)
-    product_multilook = self.apply_multilook(product_dinsar)
-    product_filter = self.do_goldstein_phasefiltering(product_multilook)
-    product_geocoding = self.apply_terrain_correction(product_filter)
+    product_merge = dg.merge(product)
+    product_dinsar = dg.topo_phase_removal(product_merge)
+    product_multilook = dg.multilook(product_dinsar)
+    product_filter = dg.goldstein_phase_filtering(product_multilook)
+    product_geocoding = dg.terrain_correction(product_filter)
 
     dg.write_dim_product(product_geocoding, os.path.join(geocoded_folder, product_geocoding.getName().replace('_IW1', '')))
 

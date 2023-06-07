@@ -1,6 +1,6 @@
 import snappy
 
-def do_topsar_split(slc_product_aoi, subswath):
+def topsar_split(slc_product_aoi, subswath):
     """
     TOPSAR Split
 

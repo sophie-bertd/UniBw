@@ -1,6 +1,6 @@
 import snappy
 
-def perform_topsar_deburst(ifg_product):
+def topsar_deburst(ifg_product):
     """
     TOPSAR-Deburst
 

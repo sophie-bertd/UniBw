@@ -1,6 +1,6 @@
 import snappy
 
-def do_apply_orbit_file(slc_product):
+def apply_orbit_file(slc_product):
     """
     Apply orbit file to SLC product
 

@@ -1,6 +1,6 @@
 import snappy
 
-def apply_terrain_correction(flt_product):
+def terrain_correction(flt_product):
     """
     Terrain-Correction
 

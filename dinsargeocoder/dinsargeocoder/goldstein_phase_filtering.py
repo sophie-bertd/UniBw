@@ -1,6 +1,6 @@
 import snappy
 
-def do_goldstein_phasefiltering(ml_product):
+def goldstein_phase_filtering(ml_product):
     """
     Goldstein Phase Filtering
 

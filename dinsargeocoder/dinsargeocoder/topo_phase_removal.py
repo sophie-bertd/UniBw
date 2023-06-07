@@ -1,6 +1,6 @@
 import snappy
 
-def remove_topo_phase(mrg_product):
+def topo_phase_removal(mrg_product):
     """
     Remove TopoPhase from the interferogram
 

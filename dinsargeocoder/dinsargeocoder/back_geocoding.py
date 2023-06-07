@@ -18,7 +18,7 @@ def back_geocoding(master_product, slave_product):
     imgset.append(master_product)
 
     # input Back-Geo-Coding parameters
-    parameters = snappy,HashMap()
+    parameters = snappy.HashMap()
     parameters.put('demName', 'SRTM 3sec')
     parameters.put('demResamplingMethod', 'BILINEAR_INTERPOLATION')
     parameters.put('resamplingType', 'BILINEAR_INTERPOLATION')

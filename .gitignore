@@ -5,6 +5,4 @@ __pycache__
 build/
 dist/
 *.egg-info
-PRISM-feat_interferometry/
-PSI_processing_chain-Develop/
 data/

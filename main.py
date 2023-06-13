@@ -104,7 +104,8 @@ for split_slave_pth in tqdm(split_slave_paths):
         product_ifg = dg.interferogram(product_esd)
         product_deb = dg.topsar_deburst(product_ifg)
 
-        dg.write_dim_product(product_esd_deb, os.path.join(coreg_folder, output_name + '_coreg.dim'))
+        # dg.write_dim_product(product_esd_deb, os.path.join(coreg_folder, output_name + '_coreg.dim'))
+        dg.write_rat_product(product_esd_deb, os.path.join(coreg_folder, output_name + '_coreg.rat'))
         dg.write_dim_product(product_deb, os.path.join(ifg_folder, output_name + '_ifg.dim'))
 
         finish = time.strftime('%H:%M:%S', time.localtime())
@@ -131,7 +132,7 @@ for product in ifg_products:
     product_filter = dg.goldstein_phase_filtering(product_multilook)
     product_geocoding = dg.terrain_correction(product_filter)
 
-    dg.write_dim_product(product_geocoding, os.path.join(geocoded_folder, product_geocoding.getName().replace('_IW1', '')))
+    dg.write_tiff_product(product_geocoding, os.path.join(geocoded_folder, product_geocoding.getName().replace('_IW1', '')))
 
     finish = time.strftime('%H:%M:%S', time.localtime())
     print('Finish geocoding: ' + finish)

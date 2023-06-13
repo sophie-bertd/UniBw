@@ -12,4 +12,5 @@ from dinsargeocoder.topo_phase_removal import topo_phase_removal
 from dinsargeocoder.topsar_deburst import topsar_deburst
 from dinsargeocoder.topsar_split import topsar_split
 from dinsargeocoder.write_dim_product import write_dim_product
-from dinsargeocoder.write_tiff_coherence import write_tiff_coherence
+from dinsargeocoder.write_rat_product import write_rat_product
+from dinsargeocoder.write_tiff_product import write_tiff_product

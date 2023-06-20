@@ -13,8 +13,8 @@ def multilook(dinsar_product):
 
     # input Multilook parameters
     parameters = snappy.HashMap()
-    parameters.put('nRgLooks', 6)
-    parameters.put('nAzLooks', 2)
+    parameters.put('nRgLooks', 19)
+    parameters.put('nAzLooks', 5)
     parameters.put('grSquarePixel', True)
 
     output = snappy.GPF.createProduct('Multilook', parameters, dinsar_product)

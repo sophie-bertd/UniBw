@@ -7,5 +7,5 @@ setup(
     description='DInSAR Geocoder',
     author='Francescopaolo Sica, Bertrand Sophie',
     license='MIT',
-    install_requires=['snappy'],
+    install_requires=['snappy', 'tqdm'],
 )

@@ -1,14 +1,16 @@
 # Geocoding script
 
-The aim of this script is to automate the coregistration and geocoding process of large stacks of SAR images.
+The aim of this script is to automate the coregistration and geocoding process of large stacks of Sentinel-1 TOPS SAR images.
 
 ## Dependencies
 
-- [dinsargeocoder]()
+- [docker](https://www.docker.com)
+- [dinsargeocoder](https://github.com/AlphardHydrae/UniBw/tree/main/dinsargeocoder)
+- [snappy](https://senbox.atlassian.net/wiki/spaces/SNAP/pages/50855941/Configure+Python+to+use+the+SNAP-Python+snappy+interface+SNAP+versions+9)
 
 ## Requirements
 
-In order to function properly, the initial file structure should look like the following:
+In order to function properly, make sure you pasted the files in the correct folder:
 
 ```
 .
@@ -20,15 +22,20 @@ In order to function properly, the initial file structure should look like the f
 └── output
 ```
 
-The master folder containing the image to use as the master image in a _.zip_ file format.
-The slaves folder containing the rest of the images in a _.zip_ file format.
-
 ## Usage
+
+### Using the provided Docker environment
+
+In the root directory of the project run the following command to start the Dpcker process:
+
+```sh
+docker compose build && docker compose up
+```
+
+### Using your own python environment
 
 Once the file structure has been correctly defined start the script:
 
 ```sh
 python3 main.py
 ```
-
-Once the processes are completed you can find the results under _exports/output/geocoding_.

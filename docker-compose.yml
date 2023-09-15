@@ -1,0 +1,11 @@
+services:
+  geocoding-container:
+    container_name: geocoding-container
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    platform: linux/amd64
+    stdin_open: true
+    tty: true
+    ports:
+      - "8192:8888"

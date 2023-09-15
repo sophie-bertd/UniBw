@@ -29,7 +29,7 @@ In order to function properly, make sure you pasted the files in the correct fol
 In the root directory of the project run the following command to start the Dpcker process:
 
 ```sh
-docker compose build && docker compose up
+docker compose up
 ```
 
 ### Using your own python environment
